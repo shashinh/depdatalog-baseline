@@ -6,7 +6,7 @@ Dependencies:
 
 To run:
 
-```python base.py --testdir={/path/to/directory/containing/graph/artifacts} --outdir={/path/to/output/dir}```
+```python base.py --testdir=/path/to/directory/containing/graph/artifacts --outdir=/path/to/output/dir```
 
 For example, running:
 
