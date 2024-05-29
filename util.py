@@ -32,7 +32,7 @@ def read_deps(ctx: Context, gob):
                 #represents the head of a rule
                 source_v = toks[0]
                 #represents the body of a rule, potentially a list of events
-                dest_vs = toks[1].split(',')
+                dest_vs = toks[1].split(';')
                 #represents the probability associated with the rule
                 cond_prob = Decimal(toks[2])
 
@@ -40,8 +40,13 @@ def read_deps(ctx: Context, gob):
                     # this represents a dependency b/w input facts
                     for d in dest_vs:
                         #sanity check
-                        assert(d in ctx.facts)
-                    ctx.fact_deps.setdefault(source_v, []).append((dest_vs, cond_prob))
+                        assert d in ctx.facts, f'source {source_v} dep {d} not a fact'
+
+                    #only save valid conditional probs (this comes into play for the side-channel bms)
+                    #  which use correlation classes to show that facts are related, without 
+                    #  supplying the actual dependency.
+                    if(cond_prob != -1):
+                        ctx.fact_deps.setdefault(source_v, []).append((dest_vs, cond_prob))
 
                     # save off an undirected version, for convenence
                     for d in dest_vs:
@@ -245,7 +250,7 @@ def run_optimize(ctx: Context, gb):
 
         objective = m.getVarByName(obj_name)
         m.setObjective(objective, GRB.MINIMIZE)
-        m.write(f"{output_dir}/min_{obj_name}.lp")
+        #m.write(f"{output_dir}/LPs/min_{obj_name}.lp")
         m.optimize()
         if m.status == GRB.Status.OPTIMAL:
             min = m.ObjVal
@@ -255,7 +260,7 @@ def run_optimize(ctx: Context, gb):
             print(m.Status)
 
         m.setObjective(objective, GRB.MAXIMIZE)
-        m.write(f'{output_dir}/max_{obj_name}.lp')
+        #m.write(f'{output_dir}/LPs/max_{obj_name}.lp')
         m.optimize()
         if m.status == GRB.Status.OPTIMAL:
             max = m.ObjVal
